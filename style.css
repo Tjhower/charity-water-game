@@ -3,7 +3,7 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh;
+  height:100%;
   margin:0;
   font-family:monospace;
 }
@@ -15,7 +15,11 @@ body{
 
 canvas{
   display:block;
-  background:#7ec850;
+  background-image: url("img/start-screen-background.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-color: #2E9DF7;
 }
 
 #ui{
