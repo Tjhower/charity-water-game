@@ -20,7 +20,18 @@ document.addEventListener("DOMContentLoaded", function () {
   titleImage.src = "img/wombat-well-builder-title.svg";
 
   //Play Button Setup
+  let playReady = false;
+
   const playButton = new Image();
+
+  playButton.onload = () => {
+    console.log("Play button image loaded!");
+    playReady = true;
+  };
+  playButton.onerror = () => {
+    console.error("Play button image failed to load!");
+  };
+
   playButton.src = "img/play-button.svg";
 
   // Start game on click
@@ -38,8 +49,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (gameState === "map") {
-      drawMap(ctx);
-      drawPlayer(ctx);
+      drawMap(ctx, canvas);
+
+      const startCol = Math.floor(camera.x / tileSize);
+      const endCol = startCol + Math.ceil(canvas.width / tileSize);
+
+      const startRow = Math.floor(camera.y / tileSize);
+      const endRow = startRow + Math.ceil(canvas.height / tileSize);
+
+      drawPlayer(ctx, canvas);
     }
 
     if (gameState === "minigame") {
@@ -85,7 +103,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const y = (canvas.height - drawHeight) / 2 + 100; // Position below title
     ctx.drawImage(playButton, x, y, drawWidth, drawHeight);
   }
+  // Camera setup
+  const camera = {
+    x: 0,
+    y: 0,
+  };
 
+  function updateCamera(player) {
+    camera.x = player.x - canvas.width / 2;
+    camera.y = player.y - canvas.height / 2;
+  }
   function drawMinigame() {
     ctx.fillStyle = "white";
     ctx.font = "20px monospace";
@@ -93,4 +120,23 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   gameLoop();
+  if (gameState === "map") {
+    updateCamera(player);
+    drawMap(ctx);
+    drawPlayer(ctx);
+  }
+  const tileX = Math.floor(newX / tileSize);
+  const tileY = Math.floor(newY / tileSize);
+
+  let tile = map[tileY]?.[tileX];
+
+  if (tile === 1) return;
+  if (tile === 2) {
+    alert("Minigame triggered!");
+    setState("minigame");
+    map[tileY][tileX] = 0;
+  }
+
+  player.x = newX;
+  player.y = newY;
 });
