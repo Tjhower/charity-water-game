@@ -1,3 +1,7 @@
+const camera = {
+  x: 0,
+  y: 0,
+};
 document.addEventListener("DOMContentLoaded", function () {
   //Get canvas properly
   const canvas = document.getElementById("gameCanvas");
@@ -5,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   //Load Title
   let titleReady = false;
-
   const titleImage = new Image();
 
   titleImage.onload = () => {
@@ -16,31 +19,20 @@ document.addEventListener("DOMContentLoaded", function () {
   titleImage.onerror = () => {
     console.error("Image failed to load!");
   };
-
   titleImage.src = "img/wombat-well-builder-title.svg";
 
   //Play Button Setup
-  let playReady = false;
-
+  let playButtonReady = false;
   const playButton = new Image();
-
   playButton.onload = () => {
-    console.log("Play button image loaded!");
-    playReady = true;
+    console.log("Play button loaded!");
+    playButtonReady = true;
   };
   playButton.onerror = () => {
-    console.error("Play button image failed to load!");
+    console.error("Play button failed to load!");
   };
-
   playButton.src = "img/play-button.svg";
-
-  // Start game on click
-  canvas.addEventListener("click", () => {
-    if (gameState === "title") {
-      setState("map");
-    }
-  });
-
+  // GAME LOOP
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -49,14 +41,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (gameState === "map") {
+      updatePlayer();
+      updateCamera(player);
       drawMap(ctx, canvas);
-
-      const startCol = Math.floor(camera.x / tileSize);
-      const endCol = startCol + Math.ceil(canvas.width / tileSize);
-
-      const startRow = Math.floor(camera.y / tileSize);
-      const endRow = startRow + Math.ceil(canvas.height / tileSize);
-
       drawPlayer(ctx, canvas);
     }
 
@@ -103,15 +90,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const y = (canvas.height - drawHeight) / 2 + 100; // Position below title
     ctx.drawImage(playButton, x, y, drawWidth, drawHeight);
   }
+  // Set Game State
+  canvas.addEventListener("click", () => {
+    if (gameState === "title") {
+      setState("map"); // now uses state.js version
+    }
+  });
   // Camera setup
-  const camera = {
-    x: 0,
-    y: 0,
-  };
-
   function updateCamera(player) {
     camera.x = player.x - canvas.width / 2;
     camera.y = player.y - canvas.height / 2;
+
+    const maxX = MAP_COLS * tileSize - canvas.width;
+    const maxY = MAP_ROWS * tileSize - canvas.height;
+
+    camera.x = Math.max(0, Math.min(camera.x, maxX));
+    camera.y = Math.max(0, Math.min(camera.y, maxY));
   }
   function drawMinigame() {
     ctx.fillStyle = "white";
@@ -120,23 +114,4 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   gameLoop();
-  if (gameState === "map") {
-    updateCamera(player);
-    drawMap(ctx);
-    drawPlayer(ctx);
-  }
-  const tileX = Math.floor(newX / tileSize);
-  const tileY = Math.floor(newY / tileSize);
-
-  let tile = map[tileY]?.[tileX];
-
-  if (tile === 1) return;
-  if (tile === 2) {
-    alert("Minigame triggered!");
-    setState("minigame");
-    map[tileY][tileX] = 0;
-  }
-
-  player.x = newX;
-  player.y = newY;
 });
