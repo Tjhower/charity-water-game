@@ -1,43 +1,39 @@
 // TILE SETTINGS
 const tileSize = 64;
 
-// MAP DATA
+// MAP DIMENSIONS
 const MAP_COLS = 100;
 const MAP_ROWS = 100;
 
-// TILE TYPES (for clarity)
+// TILE TYPES
 const TILE_GRASS = 0;
-const TILE_WALL = 1;
-const TILE_RESOURCE = 2;
+const TILE_WALL = 1; // Border walls
+const TILE_TREE = 2; // Obstacles inside map
+const TILE_ROCK = 3;
+const TILE_WOOD = 4;
+const TILE_ROPE = 5;
+const TILE_BUCKET = 6;
+const TILE_PULLEY = 7;
 
-// MAP LAYERS
+// LAYERS
 const groundLayer = [];
-const objectLayer = [];
+const objectLayer = []; // Trees, walls
+const resourceLayer = []; // Rocks, wood, rope, bucket, pulley
 
 // GENERATE MAP
 for (let row = 0; row < MAP_ROWS; row++) {
   const groundRow = [];
   const objectRow = [];
+  const resourceRow = [];
 
   for (let col = 0; col < MAP_COLS; col++) {
-    // 🌿 DEFAULT GROUND
+    // 🌿 Ground
     let groundTile = TILE_GRASS;
-
-    // 🌍 SIMPLE BIOMES (vertical slices)
-    if (row < 30) {
-      groundTile = TILE_GRASS; // forest zone (later: darker grass)
-    } else if (row < 60) {
-      groundTile = TILE_GRASS; // village zone
-    } else {
-      groundTile = TILE_GRASS; // river zone (placeholder)
-    }
-
     groundRow.push(groundTile);
 
-    // 🌳 OBJECTS / RESOURCES
+    // 🌳 Obstacles
     let objectTile = 0;
-
-    // Border walls (keep player inside world)
+    // Border walls
     if (
       row === 0 ||
       col === 0 ||
@@ -45,65 +41,76 @@ for (let row = 0; row < MAP_ROWS; row++) {
       col === MAP_COLS - 1
     ) {
       objectTile = TILE_WALL;
-    } else {
-      // Random resource placement
-      if (Math.random() < 0.05) {
-        objectTile = TILE_RESOURCE;
-      }
+    } else if (Math.random() < 0.05) {
+      objectTile = TILE_TREE;
     }
-
     objectRow.push(objectTile);
+
+    // Resources layer (empty for now)
+    resourceRow.push(0);
   }
 
   groundLayer.push(groundRow);
   objectLayer.push(objectRow);
+  resourceLayer.push(resourceRow);
 }
+
+// PLACE UNIQUE RESOURCES (1 of each)
+function placeResource(tileType) {
+  let placed = false;
+  while (!placed) {
+    const row = Math.floor(Math.random() * (MAP_ROWS - 2)) + 1;
+    const col = Math.floor(Math.random() * (MAP_COLS - 2)) + 1;
+
+    // Only place if no obstacle or other resource
+    if (objectLayer[row][col] === 0 && resourceLayer[row][col] === 0) {
+      resourceLayer[row][col] = tileType;
+      placed = true;
+    }
+  }
+}
+
+// Place one of each resource
+placeResource(TILE_ROCK);
+placeResource(TILE_WOOD);
+placeResource(TILE_ROPE);
+placeResource(TILE_BUCKET);
+placeResource(TILE_PULLEY);
 
 // DRAW MAP (CAMERA-BASED)
 function drawMap(ctx, canvas) {
   const startCol = Math.floor(camera.x / tileSize);
   const endCol = startCol + Math.ceil(canvas.width / tileSize);
-
   const startRow = Math.floor(camera.y / tileSize);
   const endRow = startRow + Math.ceil(canvas.height / tileSize);
 
-  for (let row = startRow; row < endRow; row++) {
-    for (let col = startCol; col < endCol; col++) {
-      // Prevent out-of-bounds errors
-      if (!groundLayer[row] || groundLayer[row][col] === undefined) continue;
+  for (let row = startRow; row <= endRow; row++) {
+    for (let col = startCol; col <= endCol; col++) {
+      if (!groundLayer[row] || !groundLayer[row][col]) continue;
 
       const worldX = col * tileSize;
       const worldY = row * tileSize;
-
       const screenX = worldX - camera.x;
       const screenY = worldY - camera.y;
 
-      // 🌱 DRAW GROUND
-      const groundTile = groundLayer[row][col];
-
-      if (groundTile === TILE_GRASS) {
-        ctx.fillStyle = "#4CAF50";
-      }
-
+      // Draw ground
+      ctx.fillStyle = "#4CAF50"; // grass
       ctx.fillRect(screenX, screenY, tileSize, tileSize);
 
-      // 🌳 DRAW OBJECTS
-      const objectTile = objectLayer[row][col];
-
-      if (objectTile === TILE_WALL) {
-        ctx.fillStyle = "#555";
+      // Draw objects
+      const objTile = objectLayer[row][col];
+      if (objTile === TILE_WALL) {
+        ctx.fillStyle = "#555"; // wall
         ctx.fillRect(screenX, screenY, tileSize, tileSize);
-      }
-
-      if (objectTile === TILE_RESOURCE) {
-        ctx.fillStyle = "#8B5A2B";
+      } else if (objTile === TILE_TREE) {
+        ctx.fillStyle = "#228B22"; // tree
         ctx.fillRect(screenX + 8, screenY + 8, tileSize - 16, tileSize - 16);
       }
     }
   }
 }
 
-//COLLISION / INTERACTION
+// COLLISION CHECKS
 function getObjectAtPixel(x, y) {
   const col = Math.floor(x / tileSize);
   const row = Math.floor(y / tileSize);
@@ -111,12 +118,24 @@ function getObjectAtPixel(x, y) {
   return objectLayer[row]?.[col];
 }
 
-//SET OBJECT TILE (e.g. after collecting resource)
 function setObjectAtPixel(x, y, value) {
   const col = Math.floor(x / tileSize);
   const row = Math.floor(y / tileSize);
 
-  if (objectLayer[row]) {
-    objectLayer[row][col] = value;
-  }
+  if (objectLayer[row]) objectLayer[row][col] = value;
+}
+
+// RESOURCE HELPERS
+function getResourceAtPixel(x, y) {
+  const col = Math.floor(x / tileSize);
+  const row = Math.floor(y / tileSize);
+
+  return resourceLayer[row]?.[col];
+}
+
+function setResourceAtPixel(x, y, value) {
+  const col = Math.floor(x / tileSize);
+  const row = Math.floor(y / tileSize);
+
+  if (resourceLayer[row]) resourceLayer[row][col] = value;
 }
