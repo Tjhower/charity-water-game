@@ -33,6 +33,8 @@ for (let row = 0; row < MAP_ROWS; row++) {
 
     // 🌳 Obstacles
     let objectTile = 0;
+    1;
+    2;
     // Border walls
     if (
       row === 0 ||
@@ -41,9 +43,16 @@ for (let row = 0; row < MAP_ROWS; row++) {
       col === MAP_COLS - 1
     ) {
       objectTile = TILE_WALL;
-    } else if (Math.random() < 0.05) {
-      objectTile = TILE_TREE;
     }
+    // Trees
+    const fixedTrees = [
+      { x: 10, y: 10 },
+      { x: 15, y: 22 },
+    ];
+    fixedTrees.forEach((t) => {
+      objectLayer[t.y][t.x] = TILE_TREE;
+    });
+
     objectRow.push(objectTile);
 
     // Resources layer (empty for now)

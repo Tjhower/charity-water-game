@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- TITLE SCREEN SETUP ---
   let titleReady = false;
   const titleImage = new Image();
-  titleImage.src = "img/wombat-well-builder-title.svg";
+  titleImage.src = "img//wombat-well-builder-title.svg";
   titleImage.onload = () => {
     titleReady = true;
   };
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let playButtonReady = false;
   const playButton = new Image();
-  playButton.src = "img/play-button.svg";
+  playButton.src = "img//play-button.svg";
   playButton.onload = () => {
     playButtonReady = true;
   };
@@ -50,8 +50,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // Update camera position
       updateCamera();
       // Draw map layers
-      drawMap(ctx, canvas);
-      drawResources(ctx);
+      drawMap(ctx, canvas); // ground + objects
+      drawResources(ctx); // resources
       // Draw player
       drawPlayer(ctx, canvas);
     }
@@ -109,16 +109,6 @@ document.addEventListener("DOMContentLoaded", function () {
     camera.x = Math.max(0, Math.min(camera.x, maxX));
     camera.y = Math.max(0, Math.min(camera.y, maxY));
   }
-
-  // --- DRAW RESOURCES ---
-  const resourceImages = {};
-  const resourceTypes = {
-    [TILE_ROCK]: "img/rock.png",
-    [TILE_WOOD]: "img/wood.png",
-    [TILE_ROPE]: "img/rope.png",
-    [TILE_BUCKET]: "img/bucket.png",
-    [TILE_PULLEY]: "img/pulley.png",
-  };
 
   // Load images
   for (const [type, src] of Object.entries(resourceTypes)) {

@@ -15,6 +15,7 @@ body {
 
 canvas {
   display: block;
+  width: 80vw;
   background-image: url("img/start-screen-background.png");
   background-repeat: no-repeat;
   background-position: center;

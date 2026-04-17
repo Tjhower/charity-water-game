@@ -22,17 +22,6 @@ document.addEventListener("keyup", (e) => {
   keys[e.key] = false;
 });
 
-// RESOURCE IMAGES
-const resourceImages = {};
-
-const resourceFiles = {
-  [TILE_ROCK]: "img/resources/rock.png",
-  [TILE_WOOD]: "img/resources/wood.png",
-  [TILE_ROPE]: "img/resources/rope.png",
-  [TILE_BUCKET]: "img/resources/bucket.png",
-  [TILE_PULLEY]: "img/resources/pulley.png",
-};
-
 // Load all resource images
 for (const [tile, path] of Object.entries(resourceFiles)) {
   const img = new Image();
@@ -75,10 +64,15 @@ function updatePlayer() {
   const tile = objectLayer[tileY][tileX];
 
   // 🚧 WALL / TREE - block movement
-  if (tile === TILE_WALL || tile === TILE_TREE) {
-    return;
-  }
+  if (!isBlocked(newX, player.y)) player.x = newX;
+  if (!isBlocked(player.x, newY)) player.y = newY;
+  function isBlocked(x, y) {
+    const col = Math.floor(x / tileSize);
+    const row = Math.floor(y / tileSize);
 
+    const tile = objectLayer[row]?.[col];
+    return tile === TILE_WALL || tile === TILE_TREE;
+  }
   // APPLY MOVEMENT
   player.x = newX;
   player.y = newY;
@@ -99,34 +93,25 @@ function interactWithResource() {
     for (let col = startCol; col <= endCol; col++) {
       if (!resourceLayer[row] || resourceLayer[row][col] === undefined)
         continue;
-
-      const resourceTile = resourceLayer[row][col];
-
-      switch (resourceTile) {
-        case TILE_ROCK:
-          alert("Rock minigame triggered!");
-          setState("minigame");
-          return;
-        case TILE_WOOD:
-          alert("Wood minigame triggered!");
-          setState("minigame");
-          return;
-        case TILE_ROPE:
-          alert("Rope minigame triggered!");
-          setState("minigame");
-          return;
-        case TILE_BUCKET:
-          alert("Bucket minigame triggered!");
-          setState("minigame");
-          return;
-        case TILE_PULLEY:
-          alert("Pulley minigame triggered!");
-          setState("minigame");
-          return;
-        default:
-          break;
-      }
     }
+    const resourceTile = resourceLayer[row][col];
+
+    let activeResource = null;
+
+    activeResource = resourceTile;
+    setState("minigame");
+    resourceLayer[row][col] = {
+      type: TILE_ROCK,
+      collected: false,
+    };
+  }
+
+  const tile = resourceLayer[row][col];
+  if (tile && !tile.collected) {
+    startMinigame({
+      type: "rock",
+      reward: "stone",
+    });
   }
 }
 
@@ -141,7 +126,8 @@ function drawPlayer(ctx, canvas) {
   );
 }
 
-// DRAW RESOURCES (called in main drawMap loop or separately)
+// Delete
+/*DRAW RESOURCES (called in main drawMap loop or separately)
 function drawResources(ctx) {
   for (let row = 0; row < resourceLayer.length; row++) {
     for (let col = 0; col < resourceLayer[row].length; col++) {
@@ -161,3 +147,4 @@ function drawResources(ctx) {
     }
   }
 }
+*/
